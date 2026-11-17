@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>나눔장터</title>
+<meta name="theme-color" content="#1E5A47">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="나눔장터">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* 레이아웃: 상단 브랜드 바 + 노란 가격표가 달린 물품 카드 그리드. 폰에서는 탭이 화면 아래로 내려간다 */
+  --bg:#ECEEE8;
+  --surface:#FFFFFF;
+  --ink:#1B1E1A;
+  --muted:#5F665D;
+  --line:#D6DAD0;
+  --tag:#FFD23F;
+  --tag-ink:#2B2200;
+  --accent:#1E5A47;
+  --on-accent:#FFFFFF;
+  --heart:#D93B4A;
+  --font-display:"Bagel Fat One","Jua","Apple SD Gothic Neo",system-ui,sans-serif;
+  --font-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --r:14px;
+  --av-l:86%; --av-ink:26%; --av-s:42%;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#121512; --surface:#1B1F1B; --ink:#EAEDE5; --muted:#A1A89D; --line:#2E342D;
+    --tag:#F2C537; --tag-ink:#2B2200; --accent:#7CCBAE; --on-accent:#0D2119; --heart:#FF6B78;
+    --av-l:30%; --av-ink:86%; --av-s:28%;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121512; --surface:#1B1F1B; --ink:#EAEDE5; --muted:#A1A89D; --line:#2E342D;
+  --tag:#F2C537; --tag-ink:#2B2200; --accent:#7CCBAE; --on-accent:#0D2119; --heart:#FF6B78;
+  --av-l:30%; --av-ink:86%; --av-s:28%;
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--font-body);-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:anywhere}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+img{max-width:100%}
+h1,h2,h3{text-wrap:balance;margin:0}
+p{margin:0}
+ul{list-style:none;margin:0;padding:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.display{font-family:var(--font-display);font-weight:400;letter-spacing:-.005em}
+.muted{color:var(--muted)}
+.svg{display:inline-block;vertical-align:-3px;flex:none}
+
+.app{max-width:1120px;margin:0 auto;padding:0 20px 96px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px 0 14px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand-tag{width:42px;height:30px;flex:none;transform:rotate(-8deg)}
+.logo{font-family:var(--font-display);font-size:30px;line-height:1}
+.sub{display:block;color:var(--muted);font-size:13px;margin-top:5px}
+
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:20px;position:sticky;top:0;background:var(--bg);z-index:5}
+.tab{display:flex;align-items:center;gap:7px;padding:12px 14px;text-decoration:none;color:var(--muted);font-weight:600;border-bottom:3px solid transparent;margin-bottom:-1px}
+.tab:hover{color:var(--ink)}
+.tab[aria-current="page"]{color:var(--ink);border-bottom-color:var(--ink)}
+.badge{min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--heart);color:#fff;font-size:11px;line-height:18px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums}
+.badge:empty{display:none}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-weight:600;white-space:nowrap;text-decoration:none}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--heart)}
+.btn.wide{width:100%;min-height:48px;font-size:16px}
+.btn:disabled{opacity:.5;cursor:default}
+.icon-btn{width:40px;height:40px;border-radius:50%;border:0;background:transparent;display:grid;place-items:center}
+.icon-btn:hover{background:var(--bg)}
+
+.notice{display:grid;gap:8px;margin-bottom:16px}
+.notice:empty{display:none}
+.note{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--tag);border-radius:10px;padding:10px 14px;font-size:14px}
+
+.toolbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:12px}
+.search{flex:1 1 280px;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:0 16px;min-height:44px;color:var(--muted)}
+.search input{flex:1;border:0;background:transparent;outline:none;color:var(--ink);min-width:0;height:42px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:7px 14px;font-weight:600;font-size:14px;color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+.summary{color:var(--muted);font-size:13.5px;margin:4px 0 16px;font-variant-numeric:tabular-nums}
+.summary b{color:var(--ink)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:18px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:transform .16s ease, box-shadow .16s ease;text-align:left}
+.card:hover{transform:translateY(-3px);box-shadow:0 10px 24px -14px rgba(0,0,0,.35)}
+.ph{position:relative;aspect-ratio:1/1;background:color-mix(in oklab,var(--line) 55%,var(--bg));overflow:hidden}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.noimg{width:100%;height:100%;display:grid;place-items:center;font-family:var(--font-display);font-size:68px;color:color-mix(in oklab,var(--ink) 16%,transparent);user-select:none}
+.tag{position:absolute;top:12px;left:10px;background:var(--tag);color:var(--tag-ink);font-family:var(--font-display);font-size:15px;line-height:1;padding:7px 12px 7px 21px;clip-path:polygon(10px 0,100% 0,100% 100%,10px 100%,0 50%);transform:rotate(-4deg);transform-origin:left center;white-space:nowrap;max-width:85%;overflow:hidden;text-overflow:ellipsis}
+.tag::before{content:"";position:absolute;left:8px;top:50%;width:6px;height:6px;margin-top:-3px;border-radius:50%;background:var(--surface)}
+.tag.inline{position:relative;top:auto;left:auto;display:inline-block;font-size:20px;padding:9px 16px 9px 26px;flex:none;max-width:none}
+.tag.inline::before{left:10px;width:7px;height:7px;margin-top:-3.5px}
+.state{position:absolute;left:10px;bottom:10px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--ink);color:var(--bg)}
+.state.s-reserved{background:var(--accent);color:var(--on-accent)}
+.card.is-done .ph img,.card.is-done .noimg{filter:grayscale(1);opacity:.55}
+.card.is-done .tag{background:var(--line);color:var(--muted)}
+.ci{padding:12px 14px 14px;display:grid;gap:3px}
+.ci h3{font-size:15.5px;font-weight:600;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.meta{color:var(--muted);font-size:13px}
+.cnt{display:flex;gap:12px;color:var(--muted);font-size:12.5px;margin-top:4px;font-variant-numeric:tabular-nums}
+.cnt span{display:inline-flex;align-items:center;gap:3px}
+.card.add{border-style:dashed;align-items:center;justify-content:center;min-height:220px;color:var(--muted);font-weight:600;gap:8px;background:transparent}
+.card.add:hover{color:var(--ink);border-color:var(--muted)}
+.sk{background:linear-gradient(90deg,var(--surface) 0%,color-mix(in oklab,var(--line) 50%,var(--surface)) 50%,var(--surface) 100%);background-size:200% 100%;animation:sh 1.3s linear infinite;border-radius:var(--r);aspect-ratio:3/4;border:1px solid var(--line)}
+@keyframes sh{to{background-position:-200% 0}}
+
+.empty{grid-column:1/-1;background:var(--surface);border:1px dashed var(--line);border-radius:var(--r);padding:44px 20px;display:grid;justify-items:center;gap:12px;text-align:center}
+.empty h3{font-family:var(--font-display);font-weight:400;font-size:22px}
+.empty p{color:var(--muted);max-width:36ch}
+
+.overlay{position:fixed;inset:0;background:rgba(8,10,8,.5);display:flex;justify-content:center;align-items:flex-end;z-index:30;animation:fade .15s ease}
+.sheet{background:var(--surface);width:100%;max-width:640px;height:94%;border-radius:20px 20px 0 0;display:flex;flex-direction:column;overflow:hidden;animation:up .24s cubic-bezier(.2,.8,.2,1)}
+.sheet.small{height:auto;max-height:94%}
+@media (min-width:720px){.overlay{align-items:center;padding:24px}.sheet{border-radius:20px;height:min(100%,880px)}}
+@keyframes fade{from{opacity:0}}
+@keyframes up{from{transform:translateY(40px);opacity:.6}}
+.sheet-bar{display:flex;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line);flex:none}
+.bar-title{font-weight:700}
+.sheet-scroll{flex:1;overflow:auto;min-height:0}
+.pad{padding:18px 20px}
+.pad-x{padding-left:20px;padding-right:20px}
+.composer{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--line);background:var(--surface);flex:none}
+.input{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 12px;min-height:44px;outline:none}
+.input:focus{border-color:var(--accent)}
+textarea.input{resize:vertical;line-height:1.6}
+
+.gallery{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;background:var(--bg)}
+.gallery img{flex:0 0 100%;width:100%;aspect-ratio:4/3;object-fit:cover;scroll-snap-align:start;display:block}
+.gallery .noimg{flex:0 0 100%;aspect-ratio:4/3;height:auto;font-size:110px}
+.gal-count{font-size:12px;color:var(--muted);text-align:right;padding:6px 20px 0}
+.seller-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.seller{display:flex;align-items:center;gap:10px;border:0;background:none;padding:4px 6px 4px 0;text-align:left;border-radius:10px;min-width:0}
+.seller b{display:block;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.seller:hover b{text-decoration-color:var(--ink)}
+.seller small{display:block;color:var(--muted);font-size:12.5px}
+.av{width:38px;height:38px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:700;font-size:15px;background:hsl(var(--h) var(--av-s) var(--av-l));color:hsl(var(--h) 45% var(--av-ink))}
+.av.lg{width:72px;height:72px;font-size:28px;font-family:var(--font-display);font-weight:400}
+.av.sm{width:30px;height:30px;font-size:12.5px}
+.title-row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-top:18px}
+.title-row h2{font-size:22px;line-height:1.3;font-weight:700}
+.status-line{display:flex;align-items:center;gap:8px;margin-top:6px}
+.pill{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--bg);color:var(--muted)}
+.pill.s-reserved{background:var(--accent);color:var(--on-accent)}
+.pill.s-done{background:var(--ink);color:var(--bg)}
+.desc{white-space:pre-wrap;margin-top:16px;font-size:15.5px;line-height:1.7;max-width:65ch}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px}
+.react{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:0 16px;min-height:42px;font-weight:600;font-variant-numeric:tabular-nums}
+.react b{font-weight:700}
+.react.on.like{color:var(--heart);border-color:var(--heart)}
+.react.on.save{color:var(--accent);border-color:var(--accent)}
+.react.dm{margin-left:auto;background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.owner-tools{margin-top:16px;padding:14px;border-radius:12px;background:var(--bg);display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.owner-tools .lbl{font-size:12.5px;font-weight:700;color:var(--muted);width:100%}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:transparent;padding:8px 14px;font-weight:600;font-size:14px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.sec{font-size:15px;font-weight:700;margin:26px 0 10px;display:flex;gap:6px;align-items:baseline}
+.sec span{color:var(--muted);font-weight:500;font-variant-numeric:tabular-nums}
+.comments{display:grid;gap:14px}
+.cm{display:flex;gap:10px}
+.cm-b{flex:1;min-width:0}
+.cm-h{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.name-btn{border:0;background:none;padding:0;font-weight:700;font-size:14px}
+.name-btn:hover{text-decoration:underline}
+.cm-t{white-space:pre-wrap;font-size:14.5px}
+.x-btn{border:0;background:none;color:var(--muted);font-size:12.5px;padding:0;margin-left:auto}
+.x-btn:hover{color:var(--heart)}
+.none{color:var(--muted);font-size:14px}
+
+.shop-head{display:grid;justify-items:center;text-align:center;gap:8px;padding:28px 20px 22px;border-bottom:1px solid var(--line)}
+.shop-head h2{font-size:28px}
+.shop-head .intro{max-width:44ch;white-space:pre-wrap}
+.shop-head .btn{margin-top:6px}
+.grid.compact{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;padding-bottom:24px}
+
+.form{display:grid;gap:18px}
+.field{display:grid;gap:6px}
+.field>label,.lbl{font-size:13.5px;font-weight:700}
+.lbl small,.hint{font-weight:400;color:var(--muted);font-size:12.5px}
+.photos{display:flex;gap:10px;flex-wrap:wrap}
+.pth{position:relative;width:88px;height:88px;border-radius:12px;overflow:hidden;background:var(--bg);border:1px solid var(--line)}
+.pth img{width:100%;height:100%;object-fit:cover}
+.pth button{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.6);color:#fff;display:grid;place-items:center;padding:0}
+.pth.loading{display:grid;place-items:center;font-size:12px;color:var(--muted)}
+.addph{position:relative;width:88px;height:88px;border-radius:12px;border:1.5px dashed var(--line);display:grid;place-items:center;align-content:center;gap:2px;color:var(--muted);font-size:12.5px;font-weight:600;cursor:pointer;text-align:center;overflow:hidden}
+.addph:hover,.addph:focus-within{border-color:var(--muted);color:var(--ink)}
+.addph input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:200px}
+.ph-note{font-size:12.5px;color:var(--muted)}
+.paste{border:1.5px dashed var(--line);border-radius:12px;padding:12px 14px;font-size:13px;color:var(--muted);background:var(--bg);outline:none;-webkit-user-select:text;user-select:text;min-height:44px}
+.paste:focus{border-color:var(--accent);color:var(--ink)}
+.paste b{color:var(--ink)}
+.paste img{display:none}
+.ph-note.err{color:var(--heart)}
+
+.page-head{display:grid;gap:6px;margin-bottom:18px}
+.page-head h2{font-size:28px}
+.page-head p{color:var(--muted);max-width:60ch}
+.plaza-form{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px;display:grid;gap:10px;margin-bottom:22px}
+.plaza-form textarea{background:transparent;border:0;padding:4px;min-height:72px}
+.row-end{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.row-end small{color:var(--muted)}
+.posts{display:grid;gap:12px;max-width:760px}
+.post{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;gap:12px}
+.post .cm-t{font-size:15px;margin-top:2px}
+
+.threads{display:grid;gap:8px;max-width:760px}
+.thr{width:100%;display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;text-align:left}
+.thr:hover{border-color:var(--muted)}
+.thr-b{flex:1;min-width:0}
+.thr-b b{display:block}
+.thr-b span{display:block;color:var(--muted);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.thr-r{display:grid;justify-items:end;gap:4px;font-size:12px;color:var(--muted)}
+.fine{color:var(--muted);font-size:12.5px;margin-top:18px;max-width:60ch}
+
+.thread{max-width:760px}
+.th-head{display:flex;align-items:center;gap:8px;padding-bottom:12px;border-bottom:1px solid var(--line);margin-bottom:12px}
+.th-list{display:flex;flex-direction:column;gap:6px;padding:8px 0 16px;min-height:40vh}
+.bub{max-width:78%;padding:9px 14px;border-radius:18px;white-space:pre-wrap;font-size:15px;line-height:1.5}
+.bub.me{align-self:flex-end;background:var(--accent);color:var(--on-accent);border-bottom-right-radius:6px}
+.bub.them{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:6px}
+.bub-t{font-size:11.5px;color:var(--muted);margin:0 6px 6px}
+.bub-t.me{align-self:flex-end}
+.bref{display:block;border:0;background:rgba(0,0,0,.1);border-radius:8px;padding:4px 8px;font-size:12.5px;font-weight:600;margin-bottom:6px;text-align:left;color:inherit}
+.th-compose{position:sticky;bottom:0;border:1px solid var(--line);border-radius:var(--r);flex-direction:column;margin-bottom:8px}
+.th-compose .row{display:flex;gap:8px}
+.ref{display:flex;align-items:center;gap:8px;font-size:13px;background:var(--bg);border-radius:8px;padding:6px 6px 6px 10px}
+.ref b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ref button{border:0;background:none;color:var(--muted);padding:2px 6px}
+
+.me-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.me-card .b{flex:1;min-width:200px;display:grid;gap:4px}
+.me-card h2{font-size:26px}
+.me-card .intro{white-space:pre-wrap;color:var(--muted)}
+.stats{display:flex;gap:22px;font-variant-numeric:tabular-nums}
+.stats div{display:grid}
+.stats b{font-family:var(--font-display);font-weight:400;font-size:24px;line-height:1.1}
+.stats span{font-size:12px;color:var(--muted)}
+.me-sec{font-size:17px;font-weight:700;margin:30px 0 12px;display:flex;gap:8px;align-items:baseline}
+.me-sec span{color:var(--muted);font-weight:500;font-size:14px}
+.admin{font-size:11px;font-weight:700;background:var(--tag);color:var(--tag-ink);padding:2px 8px;border-radius:999px;vertical-align:middle}
+
+.confirm{padding:24px 22px 20px;display:grid;gap:18px}
+.confirm p{font-size:16px}
+.confirm .row-end{justify-content:flex-end}
+
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:11px 18px;border-radius:999px;font-size:14px;font-weight:600;z-index:50;max-width:calc(100% - 32px);text-align:center;box-shadow:0 10px 30px -10px rgba(0,0,0,.4);animation:fade .2s ease}
+.toast:empty{display:none}
+
+.short{display:none}
+@media (max-width:719px){
+  .app{padding:0 16px 92px}
+  .top{padding:16px 0 12px}
+  .logo{font-size:25px}
+  .sub{font-size:12px}
+  .long{display:none}
+  .short{display:inline}
+  .tabs{position:fixed;left:0;right:0;bottom:0;top:auto;margin:0;border-top:1px solid var(--line);border-bottom:0;background:var(--surface);justify-content:space-around;padding:0 4px}
+  .tab{flex:1;flex-direction:column;gap:1px;font-size:11.5px;padding:8px 4px 10px;border-bottom:0;border-top:3px solid transparent;margin:0;position:relative}
+  .tab[aria-current="page"]{border-top-color:var(--ink)}
+  .tab .badge{position:absolute;top:4px;left:calc(50% + 6px)}
+  .grid{grid-template-columns:1fr 1fr;gap:12px}
+  .ci{padding:10px 11px 12px}
+  .ci h3{font-size:14.5px}
+  .tag{font-size:13px;top:9px}
+  .th-compose{bottom:68px}
+  .toast{bottom:84px}
+  .react.dm{margin-left:0}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+}
+
+/* ---- 웹앱 전용 ---- */
+.gate{max-width:460px;margin:4vh auto 40px;background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:28px 24px;display:grid;gap:18px}
+.gate h2{font-family:var(--font-display);font-weight:400;font-size:26px}
+.gate .lead{color:var(--muted)}
+.gate .switch{border:0;background:none;color:var(--accent);font-weight:600;padding:4px 0;justify-self:center}
+.err-line{color:var(--heart);font-size:14px;min-height:1px}
+.err-line:empty{display:none}
+.banner{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:12px;padding:10px 12px 10px 14px;font-size:14px}
+.banner p{flex:1}
+.banner .btn{min-height:36px;padding:0 14px;font-size:14px}
+.banner .x{border:0;background:none;color:var(--muted);padding:4px}
+.keybox{display:flex;gap:8px;align-items:center;background:var(--bg);border-radius:12px;padding:10px 12px;font-family:ui-monospace,Menlo,monospace;font-size:17px;letter-spacing:.04em}
+.keybox b{flex:1;word-break:break-all}
+.small-links{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px}
+.small-links button{border:0;background:none;color:var(--muted);font-size:13px;padding:0;text-decoration:underline;text-underline-offset:3px}
+.center-note{text-align:center;color:var(--muted);padding:60px 20px}
+.photo-loading{aspect-ratio:4/3;display:grid;place-items:center;color:var(--muted);font-size:14px;background:var(--bg);flex:0 0 100%}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <svg class="brand-tag" viewBox="0 0 42 30" aria-hidden="true"><path d="M11 1h29a1 1 0 0 1 1 1v26a1 1 0 0 1-1 1H11L1 15z" fill="var(--tag)"/><circle cx="10" cy="15" r="3" fill="var(--bg)"/></svg>
+      <div>
+        <h1 class="logo" id="mk-name">나눔장터</h1>
+        <span class="sub" id="mk-sub"></span>
+      </div>
+    </div>
+    <button class="btn primary" type="button" data-act="new-item" id="hdr-new" hidden><svg class="svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span class="long">물품 올리기</span><span class="short">올리기</span></button>
+  </header>
+  <nav class="tabs" id="tabs" aria-label="장터 메뉴" hidden></nav>
+  <div class="notice" id="notice" role="status"></div>
+  <main id="main"></main>
+</div>
+<div id="layer"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getAuth, onAuthStateChanged, signInAnonymously, signInWithEmailAndPassword, EmailAuthProvider, linkWithCredential } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, collection, doc, getDoc, setDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, limit, increment, deleteField } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import * as CFG from './firebase-config.js';
+
+/* ---------- 작은 도구들 ---------- */
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const str = (v, n) => (typeof v === 'string' ? v : (v == null ? '' : String(v))).slice(0, n);
+const num = v => (typeof v === 'number' && isFinite(v)) ? v : 0;
+const ALPHA = 'abcdefghjkmnpqrstuvwxyz23456789';
+const randStr = n => { const a = crypto.getRandomValues(new Uint8Array(n)); return Array.from(a, x => ALPHA[x % ALPHA.length]).join(''); };
+const rid = () => randStr(16);
+const first = s => Array.from(String(s || '').trim())[0] || '?';
+const hue = s => { let h = 0; for (const ch of String(s)) h = (h * 31 + ch.charCodeAt(0)) % 360; return h; };
+const okImg = s => typeof s === 'string' && s.length < 1200000 && /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(s);
+function ago(t) {
+  t = num(t); if (!t) return '';
+  const d = (Date.now() - t) / 1000;
+  if (d < 60) return '방금';
+  if (d < 3600) return Math.floor(d / 60) + '분 전';
+  if (d < 86400) return Math.floor(d / 3600) + '시간 전';
+  if (d < 86400 * 7) return Math.floor(d / 86400) + '일 전';
+  const x = new Date(t), n = new Date();
+  return (x.getFullYear() !== n.getFullYear() ? x.getFullYear() + '년 ' : '') + (x.getMonth() + 1) + '월 ' + x.getDate() + '일';
+}
+function clock(t) { const x = new Date(num(t)); return (x.getMonth()+1) + '/' + x.getDate() + ' ' + String(x.getHours()).padStart(2,'0') + ':' + String(x.getMinutes()).padStart(2,'0'); }
+function priceLabel(p) {
+  p = str(p, 20).trim();
+  if (!p || p === '0' || p === '0원') return '나눔';
+  const n = Number(p.replace(/[,\s원]/g, ''));
+  if (isFinite(n) && n > 0 && /^[\d,\s원]+$/.test(p)) return n.toLocaleString('ko-KR') + '원';
+  return p;
+}
+const sv = (d, size = 16, fill = false) => `<svg class="svg" viewBox="0 0 24 24" width="${size}" height="${size}" fill="${fill ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+const P = {
+  heart: '<path d="M12 20.3s-7.4-4.5-9.2-9C1.6 8 3.7 4.6 7.1 4.6c2 0 3.5 1.1 4.9 2.9 1.4-1.8 2.9-2.9 4.9-2.9 3.4 0 5.5 3.4 4.3 6.7-1.8 4.5-9.2 9-9.2 9z"/>',
+  bm: '<path d="M6.5 3.8h11a.9.9 0 0 1 .9.9v15.6L12 16.4l-6.4 3.9V4.7a.9.9 0 0 1 .9-.9z"/>',
+  chat: '<path d="M4.2 5.2h15.6v10.4H9.4l-5.2 4V5.2z"/>',
+  search: '<circle cx="11" cy="11" r="6.4"/><path d="M16 16l4.4 4.4"/>',
+  back: '<path d="M15 5l-7 7 7 7"/>',
+  close: '<path d="M6 6l12 12M18 6L6 18"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  market: '<path d="M3.8 9.2L5.4 4.5h13.2l1.6 4.7M3.8 9.2h16.4M4.8 9.2v10.3h14.4V9.2M9.6 19.5v-5.2h4.8v5.2"/>',
+  plaza: '<path d="M3.8 5h11.4v8.4H8.6l-4.8 3.4V5zM15.2 9.2h5v8.6l-3-2.2h-7.4v-2.2"/>',
+  mail: '<rect x="3.4" y="5.4" width="17.2" height="13.2" rx="1.6"/><path d="M4 6.6l8 6 8-6"/>',
+  me: '<circle cx="12" cy="8.4" r="3.6"/><path d="M4.8 20c.9-3.7 3.7-5.6 7.2-5.6s6.3 1.9 7.2 5.6"/>',
+  camera: '<path d="M4 8h3l1.6-2.4h6.8L17 8h3v11H4z"/><circle cx="12" cy="13.2" r="3.4"/>'
+};
+const STATUS = { open: '거래 가능', reserved: '예약중', done: '거래완료' };
+const TABS = [['market', '장터', P.market], ['plaza', '광장', P.plaza], ['inbox', '쪽지', P.mail], ['me', '내 상점', P.me]];
+const KEY_DOMAIN = '@nanum-market.app';
+
+/* ---------- 상태 ---------- */
+const S = {
+  phase: 'loading', gate: 'join', gateErr: '', busy: false, joining: false,
+  view: 'market', filter: 'all', q: '',
+  me: null, isAdmin: false, anon: true,
+  members: {}, items: {}, reactions: {}, plaza: {}, msgIn: {}, msgOut: {}, priv: {},
+  ready: {}, comments: {}, cmItem: null, cmUnsub: null, photoCache: {}, photoLoading: {},
+  stack: [], thread: null, threadItem: null, ed: null,
+  builtKey: null, layerKey: null, marking: false, threadCount: -1,
+  unsubs: [], hideBanner: {}
+};
+let D = null, fs = null, auth = null, installEvt = null;
+
+const configured = CFG.firebaseConfig && CFG.firebaseConfig.apiKey && !/여기|PASTE/.test(CFG.firebaseConfig.apiKey);
+$('#mk-name').textContent = CFG.MARKET_NAME || '나눔장터';
+$('#mk-sub').textContent = CFG.MARKET_SUB || '';
+document.title = CFG.MARKET_NAME || '나눔장터';
+
+/* ---------- 데이터 정리 ---------- */
+function derive() {
+  const items = {}, likes = {}, saves = {}, threads = {};
+  for (const [id, it] of Object.entries(S.items)) {
+    if (!it || !str(it.title, 60).trim() || typeof it.owner !== 'string') continue;
+    items[id] = {
+      id, owner: it.owner, title: str(it.title, 60), desc: str(it.desc, 1200), price: str(it.price, 20),
+      status: STATUS[it.status] ? it.status : 'open', at: num(it.at), cc: Math.max(0, num(it.cc)),
+      thumb: okImg(it.thumb) ? it.thumb : '', photos: Array.isArray(it.photos) ? it.photos.filter(x => typeof x === 'string').slice(0, 5) : []
+    };
+  }
+  for (const r of Object.values(S.reactions)) {
+    for (const [id, v] of Object.entries((r && r.likes) || {})) if (v === true) likes[id] = (likes[id] || 0) + 1;
+    for (const [id, v] of Object.entries((r && r.saves) || {})) if (v === true) saves[id] = (saves[id] || 0) + 1;
+  }
+  const readAt = (S.priv && S.priv.readAt) || {};
+  let unread = 0;
+  const all = [...Object.entries(S.msgIn), ...Object.entries(S.msgOut)];
+  const seen = new Set();
+  for (const [mid, m] of all) {
+    if (seen.has(mid) || !m || typeof m.to !== 'string' || typeof m.from !== 'string' || !str(m.text, 600).trim()) continue;
+    seen.add(mid);
+    const other = m.from === S.me ? m.to : m.from;
+    if (other === S.me) continue;
+    const t = threads[other] = threads[other] || { other, msgs: [], unread: 0, last: 0, lastFromOther: 0 };
+    const msg = { id: mid, from: m.from, to: m.to, text: str(m.text, 600), at: num(m.at), item: typeof m.item === 'string' ? m.item : null };
+    t.msgs.push(msg);
+    t.last = Math.max(t.last, msg.at);
+    if (msg.from === other) { t.lastFromOther = Math.max(t.lastFromOther, msg.at); if (msg.at > num(readAt[other])) t.unread++; }
+  }
+  for (const t of Object.values(threads)) { t.msgs.sort((a, b) => a.at - b.at); unread += t.unread; }
+  const mine = S.reactions[S.me] || {};
+  D = { items, likes, saves, threads, unread, myLikes: mine.likes || {}, mySaves: mine.saves || {} };
+}
+const shopOf = uid => S.members[uid] || null;
+const nameOf = uid => str(shopOf(uid) && shopOf(uid).name, 20).trim() || '알 수 없음';
+const teamOf = uid => str(shopOf(uid) && shopOf(uid).team, 30).trim();
+const av = (uid, cls = '') => `<span class="av ${cls}" style="--h:${hue(uid)}" aria-hidden="true">${esc(first(nameOf(uid)))}</span>`;
+
+/* ---------- 그리기 ---------- */
+let queued = false;
+function schedule() { if (queued) return; queued = true; requestAnimationFrame(() => { queued = false; paint(); }); }
+function setHTML(el, html) { if (el && el._h !== html) { el.innerHTML = html; el._h = html; } }
+
+function paint() {
+  derive();
+  const inside = S.phase === 'in';
+  $('#tabs').hidden = !inside; $('#hdr-new').hidden = !inside;
+  paintNotice();
+  if (!inside) { S.builtKey = null; S.stack = []; paintLayer(); paintGate(); return; }
+  paintTabs();
+  paintView();
+  paintLayer();
+  maybeMarkRead();
+}
+
+const isKakao = /KAKAOTALK/i.test(navigator.userAgent);
+const isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isStandalone = () => window.navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
+
+function paintNotice() {
+  const n = [];
+  if (isKakao && !S.hideBanner.kakao) n.push(`<div class="banner"><p>카톡 안에서도 쓸 수 있지만, 사진 올리기와 홈 화면 설치는 브라우저에서 더 잘 돼요.</p><button class="btn primary" type="button" data-act="open-external">브라우저로 열기</button><button class="x" type="button" data-act="hide-banner" data-k="kakao" aria-label="닫기">${sv(P.close, 16)}</button></div>`);
+  else if (!isStandalone() && installEvt && !S.hideBanner.install) n.push(`<div class="banner"><p>휴대폰에 앱으로 설치하면 바로 열 수 있어요.</p><button class="btn primary" type="button" data-act="install">앱 설치</button><button class="x" type="button" data-act="hide-banner" data-k="install" aria-label="닫기">${sv(P.close, 16)}</button></div>`);
+  else if (isIOS && !isStandalone() && !isKakao && !S.hideBanner.ios) n.push(`<div class="banner"><p>앱처럼 쓰려면 사파리 아래쪽 공유 버튼 → <b>홈 화면에 추가</b>를 누르세요. ${S.phase === 'in' ? '홈 화면 앱에서는 내 상점 → 열쇠로 이어서 쓸 수 있어요.' : '추가한 아이콘으로 열어서 등록하면 편해요.'}</p><button class="x" type="button" data-act="hide-banner" data-k="ios" aria-label="닫기">${sv(P.close, 16)}</button></div>`);
+  if (S.phase === 'in' && S.offline) n.push('<p class="note">서버에 연결하지 못했어요. 인터넷 연결을 확인해 주세요.</p>');
+  setHTML($('#notice'), n.join(''));
+}
+
+function paintTabs() {
+  setHTML($('#tabs'), TABS.map(([k, label, ic]) =>
+    `<a class="tab" href="#${k}" data-tab="${k}"${S.view === k ? ' aria-current="page"' : ''}>${sv(ic, 20)}<span>${label}</span>${k === 'inbox' ? `<span class="badge">${D.unread ? (D.unread > 99 ? '99+' : D.unread) : ''}</span>` : ''}</a>`
+  ).join(''));
+}
+
+/* 입장 화면 */
+function paintGate() {
+  const main = $('#main');
+  const key = 'gate:' + S.phase + ':' + S.gate;
+  if (S.builtGate !== key) {
+    S.builtGate = key;
+    if (!configured) main.innerHTML = `<div class="gate"><h2>설정이 필요해요</h2><p class="lead">firebase-config.js 파일에 Firebase 설정값을 붙여넣어야 장터가 열려요. 설치 안내서의 3단계를 확인해 주세요.</p></div>`;
+    else if (S.phase === 'loading') main.innerHTML = `<p class="center-note">장터를 여는 중이에요…</p>`;
+    else if (S.gate === 'key') main.innerHTML = `<form class="gate" data-form="key">
+        <h2>열쇠로 들어가기</h2>
+        <p class="lead">다른 기기에서 쓰던 상점이 있다면, 그 기기의 <b>내 상점 → 다른 기기에서 쓰기</b>에 나온 열쇠를 입력하세요.</p>
+        <div class="field"><label for="g-key">내 열쇠</label><input class="input" id="g-key" name="key" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="예: ab3k9mxq-7hd2ma9zpq" required></div>
+        <p class="err-line" id="g-err"></p>
+        <button class="btn primary wide" type="submit">들어가기</button>
+        <button class="switch" type="button" data-act="gate" data-g="join">처음 왔어요</button></form>`;
+    else if (S.gate === 'setup') main.innerHTML = `<form class="gate" data-form="setup">
+        <h2>장터 처음 설정</h2>
+        <p class="lead">장터를 연 사람이 한 번만 하는 설정이에요. 입장 코드는 동료들에게 알려줄 코드, 관리자 코드는 나만 아는 코드예요.</p>
+        <div class="field"><label for="s-code">입장 코드 <span class="hint">4자 이상</span></label><input class="input" id="s-code" name="code" minlength="4" maxlength="40" required autocomplete="off" placeholder="예: 창원나눔2026"></div>
+        <div class="field"><label for="s-admin">관리자 코드 <span class="hint">4자 이상, 입장 코드와 다르게</span></label><input class="input" id="s-admin" name="admin" minlength="4" maxlength="40" required autocomplete="off"></div>
+        ${profileFields({})}
+        <p class="err-line" id="g-err"></p>
+        <button class="btn primary wide" type="submit">장터 만들기</button></form>`;
+    else main.innerHTML = `<form class="gate" data-form="join">
+        <h2>장터에 들어오기</h2>
+        <p class="lead">입장 코드와 장터에서 쓸 이름을 적어주세요. 가입은 필요 없어요.</p>
+        <div class="field"><label for="j-code">입장 코드</label><input class="input" id="j-code" name="code" maxlength="40" required autocomplete="off" placeholder="공지받은 코드"></div>
+        ${profileFields({})}
+        <p class="err-line" id="g-err"></p>
+        <button class="btn primary wide" type="submit">장터 들어가기</button>
+        <button class="switch" type="button" data-act="gate" data-g="key">다른 기기에서 쓰던 열쇠가 있어요</button></form>`;
+  }
+  const e = $('#g-err'); if (e) e.textContent = S.gateErr || '';
+  main.querySelectorAll('button[type="submit"]').forEach(b => b.disabled = S.busy);
+}
+function profileFields(sh) {
+  return `<div class="field"><label for="pf-name">이름</label><input class="input" id="pf-name" name="name" maxlength="20" required value="${esc(str(sh.name, 20))}" placeholder="예: 김연두"></div>
+    <div class="field"><label for="pf-team">소속 <span class="hint">선택</span></label><input class="input" id="pf-team" name="team" maxlength="30" value="${esc(str(sh.team, 30))}" placeholder="예: 편성제작국 · 3층"></div>
+    <div class="field"><label for="pf-intro">간략 소개 <span class="hint">선택</span></label><textarea class="input" id="pf-intro" name="intro" rows="3" maxlength="200" placeholder="예: 아이 장난감과 책을 자주 나눠요. 점심시간에 거래 가능해요.">${esc(str(sh.intro, 200))}</textarea></div>`;
+}
+
+/* 화면별 뼈대 */
+const SKEL = {
+  market: () => `
+    <div class="toolbar">
+      <label class="search" for="q">${sv(P.search, 18)}<input id="q" type="search" placeholder="찾는 물건이나 사람 이름" autocomplete="off" value="${esc(S.q)}"></label>
+      <div class="chips" id="m-chips" role="group" aria-label="보기 설정"></div>
+    </div>
+    <p class="summary" id="m-sum"></p>
+    <div class="grid" id="m-grid"></div>`,
+  plaza: () => `
+    <div class="page-head"><h2 class="display">광장</h2><p>장터 사람 모두가 보는 게시판이에요. 구하는 물건, 나눔 예고, 거래 후기를 자유롭게 남겨주세요.</p></div>
+    <form class="plaza-form" data-form="plaza">
+      <textarea class="input" id="pl-text" name="text" rows="3" maxlength="500" placeholder="예: 안 쓰는 모니터 받침대 있으신 분 계세요?" aria-label="광장에 글쓰기"></textarea>
+      <div class="row-end"><small>500자까지</small><button class="btn primary" type="submit">올리기</button></div>
+    </form>
+    <ul class="posts" id="pl-list"></ul>`,
+  inbox: () => `
+    <div class="page-head"><h2 class="display">쪽지함</h2><p>물품 화면이나 상점에서 쪽지 보내기를 누르면 대화가 시작돼요. 쪽지는 주고받는 두 사람만 읽을 수 있어요.</p></div>
+    <ul class="threads" id="ib-list"></ul>`,
+  thread: () => `
+    <section class="thread">
+      <div class="th-head"><button class="icon-btn" type="button" data-act="thread-back" aria-label="쪽지함으로">${sv(P.back, 22)}</button><div id="th-who"></div></div>
+      <div class="th-list" id="th-list"></div>
+      <form class="composer th-compose" data-form="msg">
+        <div id="th-item"></div>
+        <div class="row"><input class="input" id="m-input" name="text" maxlength="500" placeholder="쪽지 내용을 적어주세요" autocomplete="off" aria-label="쪽지 내용"><button class="btn primary" type="submit">보내기</button></div>
+      </form>
+    </section>`,
+  me: () => `<div id="me-body"></div>`
+};
+
+function paintView() {
+  const key = S.view === 'inbox' && S.thread ? 'thread:' + S.thread : S.view;
+  if (key !== S.builtKey) { $('#main').innerHTML = SKEL[key.startsWith('thread:') ? 'thread' : key](); S.builtKey = key; S.builtGate = null; S.threadCount = -1; }
+  if (S.view === 'market') paintMarket();
+  else if (S.view === 'plaza') paintPlaza();
+  else if (S.view === 'inbox') S.thread ? paintThread() : paintInbox();
+  else paintMe();
+}
+
+const thumb = it => it.thumb ? `<img src="${it.thumb}" alt="" loading="lazy">` : `<div class="noimg">${esc(first(it.title))}</div>`;
+function card(it) {
+  const st = it.status;
+  return `<div class="card${st === 'done' ? ' is-done' : ''}" role="button" tabindex="0" data-act="open-item" data-id="${esc(it.id)}" aria-label="${esc(it.title)}, ${esc(priceLabel(it.price))}">
+    <div class="ph">${thumb(it)}<span class="tag">${esc(priceLabel(it.price))}</span>${st !== 'open' ? `<span class="state s-${st}">${STATUS[st]}</span>` : ''}</div>
+    <div class="ci"><h3>${esc(it.title)}</h3><p class="meta">${esc(nameOf(it.owner))} · ${ago(it.at)}</p>
+      <p class="cnt"><span>${sv(P.heart, 14)}${D.likes[it.id] || 0}</span><span>${sv(P.bm, 14)}${D.saves[it.id] || 0}</span><span>${sv(P.chat, 14)}${it.cc}</span></p></div></div>`;
+}
+const skeletons = n => Array.from({ length: n }, () => '<div class="sk" aria-hidden="true"></div>').join('');
+const sortItems = l => l.sort((a, b) => ((a.status === 'done') - (b.status === 'done')) || (b.at - a.at));
+
+function paintMarket() {
+  setHTML($('#m-chips'), [['all', '전체'], ['open', '거래 가능'], ['saved', '찜한 물품']].map(([k, l]) =>
+    `<button class="chip" type="button" data-act="filter" data-f="${k}" aria-pressed="${S.filter === k}">${l}</button>`).join(''));
+  const all = Object.values(D.items), q = S.q.trim().toLowerCase();
+  const list = sortItems(all.filter(it => {
+    if (S.filter === 'open' && it.status === 'done') return false;
+    if (S.filter === 'saved' && D.mySaves[it.id] !== true) return false;
+    if (q && !(it.title + ' ' + it.desc + ' ' + nameOf(it.owner)).toLowerCase().includes(q)) return false;
+    return true;
+  }));
+  const live = all.filter(i => i.status !== 'done').length, today = all.filter(i => Date.now() - i.at < 86400000).length;
+  setHTML($('#m-sum'), S.ready.items ? `거래 가능한 물품 <b>${live}</b>개 · 오늘 올라온 물품 <b>${today}</b>개 · 참여자 <b>${Object.keys(S.members).length}</b>명` : '장터를 불러오는 중이에요');
+  let html;
+  if (!S.ready.items && !all.length) html = skeletons(8);
+  else if (!all.length) html = `<div class="empty"><h3>아직 올라온 물품이 없어요</h3><p>안 쓰는 물건을 찍어서 올려보세요. 동료가 쪽지로 연락을 줄 거예요.</p><button class="btn primary" type="button" data-act="new-item">${sv(P.plus, 18)}첫 물품 올리기</button></div>`;
+  else if (!list.length) html = `<div class="empty"><h3>조건에 맞는 물품이 없어요</h3><p>${S.filter === 'saved' ? '마음에 드는 물품에서 찜을 누르면 여기에 모여요.' : '검색어를 바꾸거나 전체 보기로 돌아가 보세요.'}</p></div>`;
+  else html = list.map(card).join('');
+  setHTML($('#m-grid'), html);
+}
+
+const canMod = uid => uid === S.me || S.isAdmin;
+
+function paintPlaza() {
+  const posts = Object.entries(S.plaza).map(([id, p]) => ({ id, by: str(p && p.by, 200), text: str(p && p.text, 600), at: num(p && p.at) })).filter(p => p.by && p.text.trim()).sort((a, b) => b.at - a.at);
+  let html;
+  if (!S.ready.plaza && !posts.length) html = '<li class="none">불러오는 중이에요</li>';
+  else if (!posts.length) html = '<li class="empty"><h3>첫 글을 남겨보세요</h3><p>무엇이 필요한지 적어두면 누군가 집에서 찾아올지도 몰라요.</p></li>';
+  else html = posts.map(p => `<li class="post">${av(p.by)}<div class="cm-b">
+      <div class="cm-h"><button class="name-btn" type="button" data-act="open-shop" data-uid="${esc(p.by)}">${esc(nameOf(p.by))}</button><span class="meta">${esc(teamOf(p.by))}${teamOf(p.by) ? ' · ' : ''}${ago(p.at)}</span>${canMod(p.by) ? `<button class="x-btn" type="button" data-act="del-post" data-id="${esc(p.id)}">삭제</button>` : ''}</div>
+      <p class="cm-t">${esc(p.text)}</p></div></li>`).join('');
+  setHTML($('#pl-list'), html);
+}
+
+function paintInbox() {
+  const ts = Object.values(D.threads).sort((a, b) => b.last - a.last);
+  let html;
+  if (!S.ready.msgIn && !ts.length) html = '<li class="none">불러오는 중이에요</li>';
+  else if (!ts.length) html = '<li class="empty"><h3>아직 주고받은 쪽지가 없어요</h3><p>마음에 드는 물품을 찾았다면 판매자 이름을 눌러 쪽지를 보내보세요.</p></li>';
+  else html = ts.map(t => {
+    const last = t.msgs[t.msgs.length - 1];
+    return `<li><button class="thr" type="button" data-act="open-thread" data-uid="${esc(t.other)}">${av(t.other)}
+      <span class="thr-b"><b>${esc(nameOf(t.other))}</b><span>${last.from === S.me ? '나: ' : ''}${esc(last.text)}</span></span>
+      <span class="thr-r"><span>${ago(t.last)}</span>${t.unread ? `<span class="badge">${t.unread}</span>` : ''}</span></button></li>`;
+  }).join('');
+  setHTML($('#ib-list'), html);
+}
+
+function paintThread() {
+  const other = S.thread, t = D.threads[other];
+  setHTML($('#th-who'), `<button class="seller" type="button" data-act="open-shop" data-uid="${esc(other)}">${av(other)}<span><b>${esc(nameOf(other))}</b><small>${esc(teamOf(other) || '상점 보기')}</small></span></button>`);
+  const ti = S.threadItem && D.items[S.threadItem];
+  setHTML($('#th-item'), ti ? `<div class="ref">문의 물품 <b>${esc(ti.title)}</b><button type="button" data-act="clear-ti" aria-label="문의 물품 빼기">${sv(P.close, 14)}</button></div>` : '');
+  const msgs = t ? t.msgs : [];
+  setHTML($('#th-list'), msgs.length ? msgs.map(m => {
+    const me = m.from === S.me, it = m.item && D.items[m.item];
+    return `<div class="bub ${me ? 'me' : 'them'}">${it ? `<button class="bref" type="button" data-act="open-item" data-id="${esc(it.id)}">${esc(it.title)}</button>` : ''}${esc(m.text)}</div><span class="bub-t${me ? ' me' : ''}">${clock(m.at)}</span>`;
+  }).join('') : `<p class="none">${esc(nameOf(other))}님에게 첫 쪽지를 보내보세요. 받는 방법이나 시간을 정하면 좋아요.</p>`);
+  if (msgs.length !== S.threadCount) { S.threadCount = msgs.length; requestAnimationFrame(() => window.scrollTo({ top: document.documentElement.scrollHeight })); }
+}
+
+function paintMe() {
+  const el = $('#me-body'), sh = shopOf(S.me) || {};
+  const mine = sortItems(Object.values(D.items).filter(i => i.owner === S.me));
+  const saved = sortItems(Object.values(D.items).filter(i => D.mySaves[i.id] === true));
+  const gotLikes = mine.reduce((a, i) => a + (D.likes[i.id] || 0), 0);
+  const key = str(S.priv && S.priv.key, 40);
+  setHTML(el, `
+    <div class="me-card">${av(S.me, 'lg')}
+      <div class="b"><h2 class="display">${esc(nameOf(S.me))} ${S.isAdmin ? '<span class="admin">장터 관리자</span>' : ''}</h2>
+        <p class="meta">${esc(teamOf(S.me) || '소속 미입력')}</p>
+        ${str(sh.intro, 300).trim() ? `<p class="intro">${esc(str(sh.intro, 300))}</p>` : ''}</div>
+      <div class="stats"><div><b>${mine.length}</b><span>올린 물품</span></div><div><b>${gotLikes}</b><span>받은 좋아요</span></div><div><b>${saved.length}</b><span>찜</span></div></div>
+      <button class="btn" type="button" data-act="edit-profile">프로필 수정</button>
+    </div>
+    <div class="small-links"><button type="button" data-act="show-key">${key || !S.anon ? '내 열쇠 보기' : '다른 기기에서도 쓰기'}</button>${S.isAdmin ? '' : '<button type="button" data-act="admin-code">관리자 코드 입력</button>'}</div>
+    <h3 class="me-sec">내 물품 <span>${mine.length}</span></h3>
+    <div class="grid"><div class="card add" role="button" tabindex="0" data-act="new-item">${sv(P.plus, 26)}물품 올리기</div>${mine.map(card).join('')}</div>
+    <h3 class="me-sec">찜한 물품 <span>${saved.length}</span></h3>
+    <div class="grid">${saved.length ? saved.map(card).join('') : '<p class="none" style="grid-column:1/-1">물품 화면에서 찜을 누르면 여기에 모여요.</p>'}</div>`);
+}
+
+/* ---------- 겹쳐 뜨는 창 ---------- */
+const topLayer = () => S.stack[S.stack.length - 1] || null;
+function openLayer(l) { if (S.stack.length > 6) S.stack.shift(); S.stack.push(l); schedule(); }
+function closeTop() { S.stack.pop(); schedule(); }
+
+function paintLayer() {
+  const top = topLayer(), root = $('#layer');
+  const key = top ? S.stack.length + ':' + top.t + ':' + (top.id || top.uid || '') : null;
+  document.body.style.overflow = top ? 'hidden' : '';
+  watchComments(top && top.t === 'item' ? top.id : null);
+  if (key !== S.layerKey) {
+    S.layerKey = key;
+    root.innerHTML = top ? layerSkel(top) : '';
+    if (top) {
+      if (top.t === 'edit') paintEdPhotos();
+      const f = root.querySelector(top.t === 'profile' ? '#pf-name' : top.t === 'confirm' ? '[data-act="confirm-no"]' : top.t === 'admin' ? '#ad-code' : '.sheet-bar .icon-btn');
+      if (f) f.focus({ preventScroll: true });
+    }
+  }
+  if (!top) return;
+  if (top.t === 'item') { setHTML($('#ly-body'), itemBody(top.id)); const c = $('#ly-compose'); if (c) c.hidden = !D.items[top.id]; }
+  if (top.t === 'shop') setHTML($('#ly-body'), shopBody(top.uid));
+  if (top.t === 'key') setHTML($('#ly-body'), keyBody());
+}
+
+function layerSkel(top) {
+  const canBack = S.stack.length > 1;
+  const bar = title => `<div class="sheet-bar"><button class="icon-btn" type="button" data-act="back" aria-label="${canBack ? '뒤로' : '닫기'}">${sv(canBack ? P.back : P.close, 22)}</button><span class="bar-title">${title}</span></div>`;
+  const wrap = (label, inner, cls = '') => `<div class="overlay" data-act="bg"><div class="sheet ${cls}" role="dialog" aria-modal="true" aria-label="${label}">${inner}</div></div>`;
+  if (top.t === 'item') return wrap('물품 상세', bar('') + `<div class="sheet-scroll" id="ly-body"></div>
+    <form class="composer" id="ly-compose" data-form="comment"><input class="input" id="c-input" name="text" maxlength="300" placeholder="궁금한 점을 댓글로 남겨보세요" autocomplete="off" aria-label="댓글"><button class="btn primary" type="submit">등록</button></form>`);
+  if (top.t === 'shop') return wrap('상점', bar('') + `<div class="sheet-scroll" id="ly-body"></div>`);
+  if (top.t === 'edit') { const t = S.ed && S.ed.mode === 'edit' ? '물품 수정' : '물품 올리기'; return wrap(t, bar(t) + `<div class="sheet-scroll">${edSkel()}</div>`); }
+  if (top.t === 'profile') return wrap('프로필 수정', bar('프로필 수정') + `<div class="sheet-scroll"><form class="pad form" data-form="profile">${profileFields(shopOf(S.me) || {})}<button class="btn primary wide" type="submit">저장</button></form></div>`, 'small');
+  if (top.t === 'key') return wrap('다른 기기에서 쓰기', bar('다른 기기에서 쓰기') + `<div class="sheet-scroll" id="ly-body"></div>`, 'small');
+  if (top.t === 'admin') return wrap('관리자 코드', bar('관리자 코드 입력') + `<div class="sheet-scroll"><form class="pad form" data-form="admin"><p class="muted">장터를 연 사람이 정한 관리자 코드를 넣으면 다른 사람의 글과 물품을 정리할 수 있어요.</p><div class="field"><label for="ad-code">관리자 코드</label><input class="input" id="ad-code" name="code" maxlength="40" required autocomplete="off"></div><button class="btn primary wide" type="submit">확인</button></form></div>`, 'small');
+  if (top.t === 'confirm') return wrap('확인', `<div class="confirm"><p>${esc(top.text)}</p><div class="row-end"><button class="btn" type="button" data-act="confirm-no">취소</button><button class="btn primary" type="button" data-act="confirm-yes">${esc(top.label || '확인')}</button></div></div>`, 'small');
+  return '';
+}
+
+function keyBody() {
+  const key = str(S.priv && S.priv.key, 40);
+  if (key) return `<div class="pad form"><p>새 휴대폰이나 PC에서 장터를 열고 <b>다른 기기에서 쓰던 열쇠가 있어요</b>를 누른 뒤 아래 열쇠를 입력하세요. 같은 상점으로 이어서 쓸 수 있어요.</p>
+    <div class="keybox"><b id="key-text">${esc(key)}</b><button class="btn" type="button" data-act="copy-key">복사</button></div>
+    <p class="hint">열쇠는 비밀번호와 같아요. 다른 사람에게 알려주지 마세요.</p></div>`;
+  if (!S.anon) return `<div class="pad"><p class="muted">이 기기는 열쇠로 들어온 상점이에요. 처음 열쇠를 만든 기기의 내 상점에서 열쇠를 확인할 수 있어요.</p></div>`;
+  return `<div class="pad form"><p>지금 상점은 이 기기에만 묶여 있어요. 열쇠를 만들면 다른 휴대폰, PC, 홈 화면 앱에서도 같은 상점을 쓸 수 있어요.</p>
+    <button class="btn primary wide" type="button" data-act="make-key"${S.busy ? ' disabled' : ''}>내 열쇠 만들기</button></div>`;
+}
+
+function itemBody(id) {
+  const it = D.items[id];
+  if (!it) return `<div class="pad"><div class="empty"><h3>찾을 수 없는 물품이에요</h3><p>판매자가 삭제했거나 아직 불러오는 중이에요.</p></div></div>`;
+  loadPhotos(it.photos);
+  const mine = it.owner === S.me, liked = D.myLikes[id] === true, saved = D.mySaves[id] === true;
+  const comments = S.comments[id] || [];
+  const gal = it.photos.length
+    ? `<div class="gallery">${it.photos.map((p, i) => S.photoCache[p] ? `<img src="${S.photoCache[p]}" alt="${esc(it.title)} 사진 ${i + 1}">` : (S.photoCache[p] === null ? `<div class="photo-loading">사진을 불러오지 못했어요</div>` : (i === 0 && it.thumb ? `<img src="${it.thumb}" alt="${esc(it.title)} 사진 1">` : `<div class="photo-loading">사진 불러오는 중</div>`))).join('')}</div>${it.photos.length > 1 ? `<p class="gal-count">옆으로 넘겨서 사진 ${it.photos.length}장 보기</p>` : ''}`
+    : `<div class="gallery"><div class="noimg">${esc(first(it.title))}</div></div>`;
+  return `${gal}<div class="pad">
+    <div class="seller-row"><button class="seller" type="button" data-act="open-shop" data-uid="${esc(it.owner)}">${av(it.owner)}<span><b>${esc(nameOf(it.owner))}</b><small>${esc(teamOf(it.owner) || '상점 보기')}</small></span></button></div>
+    <div class="title-row"><h2>${esc(it.title)}</h2><span class="tag inline">${esc(priceLabel(it.price))}</span></div>
+    <div class="status-line"><span class="pill s-${it.status}">${STATUS[it.status]}</span><span class="meta">${ago(it.at)} 등록</span></div>
+    ${it.desc.trim() ? `<p class="desc">${esc(it.desc)}</p>` : ''}
+    <div class="actions">
+      <button class="react like${liked ? ' on' : ''}" type="button" data-act="react" data-k="likes" data-id="${esc(id)}" aria-pressed="${liked}">${sv(P.heart, 18, liked)}좋아요 <b>${D.likes[id] || 0}</b></button>
+      <button class="react save${saved ? ' on' : ''}" type="button" data-act="react" data-k="saves" data-id="${esc(id)}" aria-pressed="${saved}">${sv(P.bm, 18, saved)}찜 <b>${D.saves[id] || 0}</b></button>
+      ${mine ? '' : `<button class="react dm" type="button" data-act="dm" data-uid="${esc(it.owner)}" data-id="${esc(id)}">${sv(P.mail, 18)}쪽지로 문의하기</button>`}
+    </div>
+    ${mine ? `<div class="owner-tools"><span class="lbl">내 물품 관리</span>
+      <div class="seg" role="group" aria-label="거래 상태">${Object.entries(STATUS).map(([k, l]) => `<button type="button" data-act="set-status" data-id="${esc(id)}" data-st="${k}" aria-pressed="${it.status === k}">${l}</button>`).join('')}</div>
+      <button class="btn" type="button" data-act="edit-item" data-id="${esc(id)}">수정</button>
+      <button class="btn danger" type="button" data-act="del-item" data-id="${esc(id)}">삭제</button></div>`
+    : S.isAdmin ? `<div class="owner-tools"><span class="lbl">장터 관리자</span><button class="btn danger" type="button" data-act="del-item" data-id="${esc(id)}">이 물품 내리기</button></div>` : ''}
+    <h3 class="sec">댓글 <span>${comments.length}</span></h3>
+    <ul class="comments">${comments.length ? comments.map(c => `<li class="cm">${av(c.by, 'sm')}<div class="cm-b">
+        <div class="cm-h"><button class="name-btn" type="button" data-act="open-shop" data-uid="${esc(c.by)}">${esc(nameOf(c.by))}</button>${c.by === it.owner ? '<span class="pill">판매자</span>' : ''}<span class="meta">${ago(c.at)}</span>${canMod(c.by) ? `<button class="x-btn" type="button" data-act="del-comment" data-id="${esc(c.id)}" data-item="${esc(id)}">삭제</button>` : ''}</div>
+        <p class="cm-t">${esc(c.text)}</p></div></li>`).join('') : `<li class="none">${S.comments[id] ? '아직 댓글이 없어요.' : '불러오는 중이에요'}</li>`}</ul>
+  </div>`;
+}
+
+function shopBody(uid) {
+  const sh = shopOf(uid);
+  if (!sh) return `<div class="pad"><div class="empty"><h3>상점 정보를 찾을 수 없어요</h3></div></div>`;
+  const items = sortItems(Object.values(D.items).filter(i => i.owner === uid));
+  const intro = str(sh.intro, 300).trim();
+  return `<div class="shop-head">${av(uid, 'lg')}<h2 class="display">${esc(nameOf(uid))}</h2>
+      <p class="meta">${esc(teamOf(uid) || '소속 미입력')}${num(sh.joinedAt) ? ' · ' + ago(sh.joinedAt) + ' 가입' : ''}</p>
+      ${intro ? `<p class="intro">${esc(intro)}</p>` : ''}
+      ${uid === S.me ? '<button class="btn" type="button" data-act="edit-profile">프로필 수정</button>' : `<button class="btn primary" type="button" data-act="dm" data-uid="${esc(uid)}">${sv(P.mail, 18)}쪽지 보내기</button>`}
+    </div>
+    <div class="pad-x"><h3 class="sec">올린 물품 <span>${items.length}</span></h3>
+    <div class="grid compact">${items.length ? items.map(card).join('') : '<p class="none" style="grid-column:1/-1">아직 올린 물품이 없어요.</p>'}</div></div>`;
+}
+
+function edSkel() {
+  const it = S.ed && S.ed.mode === 'edit' ? D.items[S.ed.id] : null;
+  return `<form class="pad form" data-form="item">
+    <div class="field"><span class="lbl">사진 <small>최대 5장, 첫 사진이 목록에 보여요</small></span>
+      <div class="photos" id="ed-photos"></div>
+      <div class="paste" id="ed-paste" contenteditable="true" role="textbox" aria-label="사진 붙여넣기" inputmode="none">${PASTE_HINT}</div>
+      <p class="ph-note" id="ed-note"></p>
+    </div>
+    <div class="field"><label for="ed-title">제목</label><input class="input" id="ed-title" name="title" maxlength="40" required value="${esc(it ? it.title : '')}" placeholder="예: 거의 새것인 탁상 가습기"></div>
+    <div class="field"><label for="ed-price">가격 <span class="hint">비워두면 무료 나눔</span></label><input class="input" id="ed-price" name="price" maxlength="20" value="${esc(it ? it.price : '')}" placeholder="예: 5000 또는 커피 한 잔"></div>
+    <div class="field"><label for="ed-desc">설명</label><textarea class="input" id="ed-desc" name="desc" rows="6" maxlength="1000" placeholder="상태, 사용 기간, 받는 방법(예: 3층 편집실 앞에서 전달) 등을 적어주세요">${esc(it ? it.desc : '')}</textarea></div>
+    <button class="btn primary wide" type="submit" id="ed-submit">${it ? '수정 완료' : '올리기'}</button>
+  </form>`;
+}
+function paintEdPhotos() {
+  const el = $('#ed-photos'); if (!el || !S.ed) return;
+  const n = S.ed.photos.length + S.ed.preparing;
+  el.innerHTML = S.ed.photos.map((p, i) => {
+    const srcv = p.full || S.photoCache[p.pid] || p.thumb || '';
+    return `<div class="pth">${srcv ? `<img src="${srcv}" alt="사진 ${i + 1}">` : ''}<button type="button" data-act="ed-rm" data-i="${i}" aria-label="사진 ${i + 1} 빼기">${sv(P.close, 14)}</button></div>`;
+  }).join('')
+    + Array.from({ length: S.ed.preparing }, () => '<div class="pth loading">준비 중</div>').join('')
+    + (n < 5 ? `<label class="addph">${sv(P.camera, 22)}<span>사진 추가</span><input type="file" id="ed-file" accept="image/*" multiple aria-label="사진 추가"></label>` : '');
+  const b = $('#ed-submit'); if (b) b.disabled = S.ed.preparing > 0 || S.ed.saving;
+  const note = $('#ed-note'); if (note) { note.textContent = S.ed.note || ''; note.className = 'ph-note' + (S.ed.noteErr ? ' err' : ''); }
+}
+function edNote(text, err) { if (!S.ed) return; S.ed.note = text; S.ed.noteErr = !!err; paintEdPhotos(); }
+
+/* ---------- 서버 연결 ---------- */
+function errText(e) {
+  const c = (e && e.code) || '';
+  if (c.includes('permission-denied')) return '권한이 없어서 저장하지 못했어요.';
+  if (c.includes('resource-exhausted')) return '오늘 쓸 수 있는 무료 사용량을 다 썼어요. 내일 다시 열려요.';
+  if (c.includes('unavailable') || c.includes('network')) return '인터넷 연결이 불안정해요. 다시 시도해 주세요.';
+  if (c.includes('invalid-argument')) return '내용이 너무 크거나 형식이 맞지 않아요.';
+  return '문제가 생겨서 저장하지 못했어요. 다시 시도해 주세요.';
+}
+let toastTimer;
+function toast(t) { const el = $('#toast'); el.textContent = t; clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.textContent = ''; }, 3400); }
+async function run(fn, okMsg) { try { await fn(); if (okMsg) toast(okMsg); return true; } catch (e) { console.warn(e); toast(errText(e)); return false; } }
+const ref = (...p) => doc(fs, ...p);
+
+function stopAll() { S.unsubs.forEach(u => { try { u(); } catch {} }); S.unsubs = []; watchComments(null); }
+const mapOf = snap => { const o = {}; snap.forEach(d => { o[d.id] = d.data(); }); return o; };
+function listen(key, q) {
+  S.unsubs.push(onSnapshot(q, snap => {
+    S[key] = snap.data ? (snap.exists() ? snap.data() : {}) : mapOf(snap);
+    S.ready[key] = true; S.offline = false; schedule();
+  }, e => { console.warn(key, e); S.ready[key] = true; if (/unavailable/.test(e.code || '')) S.offline = true; schedule(); }));
+}
+function startListeners() {
+  stopAll();
+  listen('members', collection(fs, 'members'));
+  listen('items', query(collection(fs, 'items'), orderBy('at', 'desc'), limit(300)));
+  listen('reactions', collection(fs, 'reactions'));
+  listen('plaza', query(collection(fs, 'plaza'), orderBy('at', 'desc'), limit(150)));
+  listen('msgIn', query(collection(fs, 'messages'), where('to', '==', S.me), limit(500)));
+  listen('msgOut', query(collection(fs, 'messages'), where('from', '==', S.me), limit(500)));
+  listen('priv', ref('private', S.me));
+}
+function watchComments(itemId) {
+  if (S.cmItem === itemId) return;
+  if (S.cmUnsub) { S.cmUnsub(); S.cmUnsub = null; }
+  S.cmItem = itemId;
+  if (!itemId || !fs) return;
+  S.cmUnsub = onSnapshot(query(collection(fs, 'comments'), where('item', '==', itemId), limit(300)), snap => {
+    const l = []; snap.forEach(d => { const c = d.data(); if (c && typeof c.by === 'string' && str(c.text, 400).trim()) l.push({ id: d.id, by: c.by, text: str(c.text, 400), at: num(c.at) }); });
+    S.comments[itemId] = l.sort((a, b) => a.at - b.at); schedule();
+  }, e => { console.warn('comments', e); S.comments[itemId] = S.comments[itemId] || []; schedule(); });
+}
+function loadPhotos(ids) {
+  for (const id of ids) {
+    if (id in S.photoCache || S.photoLoading[id]) continue;
+    S.photoLoading[id] = true;
+    getDoc(ref('photos', id)).then(s => { const d = s.exists() ? s.data().data : null; S.photoCache[id] = okImg(d) ? d : null; })
+      .catch(() => { S.photoCache[id] = null; }).finally(() => { delete S.photoLoading[id]; schedule(); });
+  }
+}
+async function loadPhotoData(id) {
+  if (S.photoCache[id]) return S.photoCache[id];
+  const s = await getDoc(ref('photos', id)); const d = s.exists() ? s.data().data : null;
+  if (okImg(d)) S.photoCache[id] = d; return okImg(d) ? d : null;
+}
+
+async function enter(u) {
+  S.me = u.uid; S.anon = u.isAnonymous;
+  const j = await getDoc(ref('joins', u.uid));
+  if (!j.exists()) { S.phase = 'gate'; S.gate = location.hash === '#setup' ? 'setup' : 'join'; schedule(); return; }
+  try { const a = await getDoc(ref('admins', u.uid)); S.isAdmin = a.exists(); } catch { S.isAdmin = false; }
+  S.phase = 'in'; startListeners();
+  const m = await getDoc(ref('members', u.uid)).catch(() => null);
+  if (m && !m.exists()) openLayer({ t: 'profile' });
+  route(); schedule();
+}
+
+function readProfile(f) {
+  const name = f.elements.name.value.trim().slice(0, 20);
+  if (!name) throw { msg: '이름을 적어주세요.' };
+  return { name, team: f.elements.team.value.trim().slice(0, 30), intro: f.elements.intro.value.trim().slice(0, 200) };
+}
+async function gateSubmit(kind, f) {
+  if (S.busy) return;
+  S.gateErr = ''; S.busy = true; schedule();
+  S.joining = true;
+  try {
+    if (kind === 'key') {
+      const m = f.elements.key.value.trim().toLowerCase().replace(/\s+/g, '').match(/^([a-z0-9]{8})-([a-z0-9]{10})$/);
+      if (!m) throw { msg: '열쇠 형식이 맞지 않아요. 예: ab3k9mxq-7hd2ma9zpq' };
+      try { await signInWithEmailAndPassword(auth, 'k' + m[1] + KEY_DOMAIN, m[2]); }
+      catch (e) { throw { msg: '열쇠가 맞지 않아요. 다시 확인해 주세요.' }; }
+      await enter(auth.currentUser); return;
+    }
+    const prof = readProfile(f);
+    const code = f.elements.code.value.trim();
+    if (code.length < 4 && kind === 'setup') throw { msg: '입장 코드는 4자 이상으로 정해 주세요.' };
+    if (!auth.currentUser) await signInAnonymously(auth);
+    const uid = auth.currentUser.uid;
+    if (kind === 'setup') {
+      const admin = f.elements.admin.value.trim();
+      if (admin.length < 4 || admin === code) throw { msg: '관리자 코드는 4자 이상, 입장 코드와 다르게 정해 주세요.' };
+      try { await setDoc(ref('config', 'secret'), { code, adminCode: admin }); }
+      catch (e) { if (/permission/.test(e.code || '')) throw { msg: '이미 설정된 장터예요. 처음 화면에서 입장 코드로 들어와 주세요.' }; throw e; }
+      await setDoc(ref('joins', uid), { code, at: Date.now() });
+      await setDoc(ref('admins', uid), { code: admin, at: Date.now() });
+    } else {
+      const has = await getDoc(ref('joins', uid));
+      if (!has.exists()) {
+        try { await setDoc(ref('joins', uid), { code, at: Date.now() }); }
+        catch (e) { if (/permission/.test(e.code || '')) throw { msg: '입장 코드가 맞지 않아요.' }; throw e; }
+      }
+    }
+    await setDoc(ref('members', uid), Object.assign(prof, { joinedAt: Date.now() }));
+    if (location.hash === '#setup') history.replaceState(null, '', location.pathname);
+    await enter(auth.currentUser);
+    toast(kind === 'setup' ? '장터를 만들었어요. 동료들에게 입장 코드를 알려주세요!' : '어서 오세요! 첫 물품을 올려보세요.');
+  } catch (e) {
+    console.warn(e);
+    S.gateErr = (e && e.msg) || errText(e);
+  } finally { S.busy = false; S.joining = false; schedule(); }
+}
+
+function need() {
+  if (S.phase !== 'in') return false;
+  if (!shopOf(S.me)) { if (S.ready.members) openLayer({ t: 'profile' }); else toast('불러오는 중이에요. 잠시만요.'); return false; }
+  return true;
+}
+function confirmBox(text, label, fn) { openLayer({ t: 'confirm', text, label, fn }); }
+
+/* ---------- 동작 ---------- */
+const ACT = {
+  'bg': (t, e) => { if (e.target === t) { S.stack = []; schedule(); } },
+  'back': () => closeTop(),
+  'gate': t => { S.gate = t.dataset.g; S.gateErr = ''; schedule(); },
+  'open-external': () => { location.href = 'kakaotalk://web/openExternal?url=' + encodeURIComponent(location.href); },
+  'install': async () => { if (!installEvt) return; installEvt.prompt(); try { await installEvt.userChoice; } catch {} installEvt = null; schedule(); },
+  'hide-banner': t => { S.hideBanner[t.dataset.k] = true; schedule(); },
+  'open-item': t => openLayer({ t: 'item', id: t.dataset.id }),
+  'open-shop': t => openLayer({ t: 'shop', uid: t.dataset.uid }),
+  'filter': t => { S.filter = t.dataset.f; schedule(); },
+  'new-item': () => { if (!need()) return; S.ed = { mode: 'new', id: rid(), photos: [], preparing: 0 }; S.stack = [{ t: 'edit', id: S.ed.id }]; schedule(); },
+  'edit-item': t => {
+    const it = D.items[t.dataset.id]; if (!it || it.owner !== S.me || !need()) return;
+    S.ed = { mode: 'edit', id: it.id, photos: it.photos.map((pid, i) => ({ pid, thumb: i === 0 ? it.thumb : '' })), preparing: 0, old: it };
+    loadPhotos(it.photos); openLayer({ t: 'edit', id: it.id });
+    const tick = setInterval(() => { if (!S.ed || S.ed.id !== it.id) return clearInterval(tick); paintEdPhotos(); if (it.photos.every(p => p in S.photoCache)) clearInterval(tick); }, 500);
+  },
+  'edit-profile': () => openLayer({ t: 'profile' }),
+  'show-key': () => openLayer({ t: 'key' }),
+  'admin-code': () => openLayer({ t: 'admin' }),
+  'make-key': async () => {
+    if (S.busy) return; S.busy = true; schedule();
+    const u = auth.currentUser;
+    try {
+      const id = randStr(8), pw = randStr(10);
+      await linkWithCredential(u, EmailAuthProvider.credential('k' + id + KEY_DOMAIN, pw));
+      await setDoc(ref('private', u.uid), { key: id + '-' + pw }, { merge: true });
+      S.anon = false; toast('열쇠를 만들었어요');
+    } catch (e) { console.warn(e); toast(/operation-not-allowed/.test(e.code || '') ? '장터 설정에서 이메일 로그인이 꺼져 있어요. 장터 관리자에게 알려주세요.' : errText(e)); }
+    finally { S.busy = false; schedule(); }
+  },
+  'copy-key': async () => { try { await navigator.clipboard.writeText($('#key-text').textContent); toast('복사했어요'); } catch { toast('길게 눌러서 복사해 주세요'); } },
+  'ed-rm': t => { if (!S.ed) return; S.ed.photos.splice(Number(t.dataset.i), 1); paintEdPhotos(); },
+  'react': t => {
+    if (!need()) return;
+    const k = t.dataset.k, id = t.dataset.id, cur = (k === 'likes' ? D.myLikes : D.mySaves)[id] === true;
+    run(() => setDoc(ref('reactions', S.me), { [k]: { [id]: cur ? deleteField() : true } }, { merge: true }), (!cur && k === 'saves') ? '찜했어요. 내 상점에서 모아 볼 수 있어요.' : '');
+  },
+  'dm': t => {
+    if (!need()) return;
+    const uid = t.dataset.uid; if (uid === S.me) return;
+    S.thread = uid; S.threadItem = t.dataset.id || null; S.stack = [];
+    if (location.hash !== '#inbox') location.hash = 'inbox'; else { S.view = 'inbox'; schedule(); }
+  },
+  'open-thread': t => { S.thread = t.dataset.uid; S.threadItem = null; schedule(); },
+  'thread-back': () => { S.thread = null; S.threadItem = null; schedule(); },
+  'clear-ti': () => { S.threadItem = null; schedule(); },
+  'set-status': t => { const it = D.items[t.dataset.id]; if (!it || it.owner !== S.me) return; run(() => updateDoc(ref('items', it.id), { status: t.dataset.st })); },
+  'del-item': t => {
+    const it = D.items[t.dataset.id]; if (!it || !canMod(it.owner)) return;
+    confirmBox(it.owner === S.me ? '이 물품을 삭제할까요? 사진도 함께 지워져요.' : `${nameOf(it.owner)}님의 물품을 장터에서 내릴까요?`, '삭제', async () => {
+      const ok = await run(() => deleteDoc(ref('items', it.id)), '삭제했어요');
+      if (ok) { for (const p of it.photos) deleteDoc(ref('photos', p)).catch(() => {}); S.stack = S.stack.filter(x => !(x.t === 'item' && x.id === it.id)); schedule(); }
+    });
+  },
+  'del-comment': t => {
+    const cid = t.dataset.id, item = t.dataset.item;
+    confirmBox('댓글을 삭제할까요?', '삭제', async () => {
+      if (await run(() => deleteDoc(ref('comments', cid)))) updateDoc(ref('items', item), { cc: increment(-1) }).catch(() => {});
+    });
+  },
+  'del-post': t => { const pid = t.dataset.id; confirmBox('광장 글을 삭제할까요?', '삭제', () => run(() => deleteDoc(ref('plaza', pid)))); },
+  'confirm-no': () => closeTop(),
+  'confirm-yes': () => { const top = topLayer(); closeTop(); if (top && top.fn) top.fn(); }
+};
+
+const FORM = {
+  join: f => gateSubmit('join', f),
+  setup: f => gateSubmit('setup', f),
+  key: f => gateSubmit('key', f),
+  async comment(f) {
+    const top = topLayer(); if (!top || top.t !== 'item' || !need()) return;
+    const inp = f.elements.text, text = inp.value.trim(); if (!text) return;
+    inp.value = '';
+    const ok = await run(() => setDoc(ref('comments', rid()), { item: top.id, by: S.me, text: text.slice(0, 300), at: Date.now() }));
+    if (ok) updateDoc(ref('items', top.id), { cc: increment(1) }).catch(() => {}); else inp.value = text;
+  },
+  async msg(f) {
+    if (!S.thread || !need()) return;
+    const inp = f.elements.text, text = inp.value.trim(); if (!text) return;
+    const m = { from: S.me, to: S.thread, text: text.slice(0, 500), at: Date.now() };
+    if (S.threadItem && D.items[S.threadItem]) m.item = S.threadItem;
+    inp.value = '';
+    const ok = await run(() => setDoc(ref('messages', rid()), m));
+    if (ok) { S.threadItem = null; schedule(); } else inp.value = text;
+  },
+  async plaza(f) {
+    if (!need()) return;
+    const inp = f.elements.text, text = inp.value.trim(); if (!text) return;
+    inp.value = '';
+    if (!await run(() => setDoc(ref('plaza', rid()), { by: S.me, text: text.slice(0, 500), at: Date.now() }))) inp.value = text;
+  },
+  async profile(f) {
+    let prof; try { prof = readProfile(f); } catch (e) { toast(e.msg); return; }
+    const isNew = !shopOf(S.me);
+    if (isNew) prof.joinedAt = Date.now(); else prof.joinedAt = num(shopOf(S.me).joinedAt) || Date.now();
+    if (await run(() => setDoc(ref('members', S.me), prof), '저장했어요')) { S.stack = S.stack.filter(x => x.t !== 'profile'); schedule(); }
+  },
+  async admin(f) {
+    const code = f.elements.code.value.trim(); if (!code) return;
+    try { await setDoc(ref('admins', S.me), { code, at: Date.now() }); S.isAdmin = true; S.stack = []; toast('관리자가 됐어요'); schedule(); }
+    catch (e) { toast(/permission/.test(e.code || '') ? '관리자 코드가 맞지 않아요.' : errText(e)); }
+  },
+  async item(f) {
+    const ed = S.ed; if (!ed || !need() || ed.saving) return;
+    if (ed.preparing) { toast('사진을 준비하는 중이에요. 잠시만요.'); return; }
+    const title = f.elements.title.value.trim().slice(0, 40);
+    if (!title) { toast('제목을 적어주세요.'); return; }
+    ed.saving = true; paintEdPhotos(); edNote(ed.photos.some(p => !p.pid) ? '사진을 올리는 중이에요…' : '저장하는 중이에요…');
+    try {
+      const now = Date.now(), old = ed.old || null;
+      for (const p of ed.photos) if (!p.pid) { const pid = rid(); await setDoc(ref('photos', pid), { owner: S.me, item: ed.id, data: p.full, at: now }); p.pid = pid; S.photoCache[pid] = p.full; }
+      const photos = ed.photos.map(p => p.pid);
+      let thumbv = '';
+      if (ed.photos[0]) {
+        const f0 = ed.photos[0];
+        if (old && old.photos[0] === f0.pid && old.thumb) thumbv = old.thumb;
+        else { const src = f0.full || await loadPhotoData(f0.pid); if (src) thumbv = await toThumb(src); }
+      }
+      const body = { owner: S.me, title, price: f.elements.price.value.trim().slice(0, 20), desc: f.elements.desc.value.trim().slice(0, 1000),
+        status: old ? old.status : 'open', at: old ? old.at : now, photos, thumb: thumbv, cc: old ? old.cc : 0 };
+      if (old) body.upAt = now;
+      await setDoc(ref('items', ed.id), body);
+      if (old) for (const pid of old.photos) if (!photos.includes(pid)) deleteDoc(ref('photos', pid)).catch(() => {});
+      S.ed = null; S.stack = old ? S.stack.filter(x => x.t !== 'edit') : [{ t: 'item', id: body && ed.id }];
+      toast(old ? '수정했어요' : '물품을 올렸어요'); schedule();
+    } catch (e) { console.warn(e); ed.saving = false; edNote(errText(e), true); }
+  }
+};
+
+/* ---------- 사진 준비: 브라우저에서 JPEG로 줄여서 데이터로 저장 ---------- */
+function loadImg(srcOrFile) {
+  return new Promise((res, rej) => {
+    const isFile = typeof srcOrFile !== 'string';
+    const url = isFile ? URL.createObjectURL(srcOrFile) : srcOrFile, img = new Image();
+    img.onload = () => res({ src: img, w: img.naturalWidth, h: img.naturalHeight, done: () => { if (isFile) URL.revokeObjectURL(url); } });
+    img.onerror = () => { if (isFile) URL.revokeObjectURL(url); rej(new Error('decode')); };
+    img.src = url;
+  });
+}
+async function decode(file) {
+  try { const b = await createImageBitmap(file); return { src: b, w: b.width, h: b.height, done: () => b.close && b.close() }; }
+  catch { return loadImg(file); }
+}
+function drawJpeg(im, max, q) {
+  const s = Math.min(1, max / Math.max(im.w, im.h));
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(im.w * s)); c.height = Math.max(1, Math.round(im.h * s));
+  const g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(im.src, 0, 0, c.width, c.height);
+  return c.toDataURL('image/jpeg', q);
+}
+async function toFull(file) {
+  const im = await Promise.race([decode(file), new Promise((_, r) => setTimeout(() => r(new Error('timeout')), 20000))]);
+  try {
+    if (!im.w || !im.h) throw new Error('decode');
+    let d = drawJpeg(im, 1080, 0.72);
+    if (d.length > 650000) d = drawJpeg(im, 860, 0.6);
+    if (d.length > 900000) throw new Error('big');
+    return d;
+  } finally { try { im.done(); } catch {} }
+}
+async function toThumb(dataUrl) { const im = await loadImg(dataUrl); return drawJpeg(im, 320, 0.62); }
+
+async function addPhotos(files) {
+  const ed = S.ed; if (!ed) return;
+  const picked = Array.from(files || []); if (!picked.length) return;
+  const room = 5 - ed.photos.length - ed.preparing;
+  if (room <= 0) { edNote('사진은 5장까지 올릴 수 있어요.', true); return; }
+  const list = picked.slice(0, room);
+  ed.preparing += list.length; edNote('사진을 준비하는 중이에요…');
+  let fail = 0;
+  for (const f of list) {
+    try { ed.photos.push({ pid: null, full: await toFull(f) }); }
+    catch { fail++; }
+    finally { ed.preparing--; if (S.ed === ed) paintEdPhotos(); }
+  }
+  if (S.ed !== ed) return;
+  edNote(fail ? '열 수 없는 사진이 있었어요. 아이폰 HEIC 사진이라면 스크린샷으로 찍어서 올리거나, 설정 > 카메라 > 포맷을 높은 호환성으로 바꿔주세요.' : '사진이 준비됐어요. 올리기를 누르면 함께 저장돼요.', !!fail);
+}
+
+/* 사진 붙여넣기 */
+const PASTE_HINT = '사진 선택창이 안 열리면: 사진 앱에서 사진을 <b>복사</b>한 뒤, 여기를 길게 눌러 <b>붙여넣기</b>';
+function resetPaste(el) { if (el) { el.innerHTML = PASTE_HINT; el.blur(); } }
+document.addEventListener('focusin', e => { if (e.target.id === 'ed-paste' && e.target.innerHTML === PASTE_HINT) e.target.innerHTML = ''; });
+document.addEventListener('focusout', e => { if (e.target.id === 'ed-paste' && !e.target.textContent.trim() && !e.target.querySelector('img')) e.target.innerHTML = PASTE_HINT; });
+document.addEventListener('paste', e => {
+  if (!S.ed || (topLayer() || {}).t !== 'edit') return;
+  const cd = e.clipboardData; if (!cd) return;
+  const files = Array.from(cd.files || []).filter(f => !f.type || f.type.startsWith('image/'));
+  if (!files.length) for (const it of Array.from(cd.items || [])) if (it.kind === 'file') { const f = it.getAsFile(); if (f) files.push(f); }
+  if (files.length) { e.preventDefault(); addPhotos(files); resetPaste($('#ed-paste')); return; }
+  if (e.target.closest && e.target.closest('#ed-paste')) setTimeout(harvestPaste, 50);
+});
+async function harvestPaste() {
+  const box = $('#ed-paste'); if (!box || !S.ed) return;
+  const imgs = Array.from(box.querySelectorAll('img'));
+  if (!imgs.length) { if (box.textContent.trim()) { box.textContent = ''; edNote('사진이 아니라 글자가 들어왔어요. 사진 앱에서 사진 자체를 복사해서 붙여넣어 주세요.', true); } return; }
+  box.innerHTML = '';
+  const blobs = [];
+  for (const im of imgs) {
+    try {
+      if (!im.complete) await new Promise((r, j) => { im.onload = r; im.onerror = j; });
+      const c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight;
+      c.getContext('2d').drawImage(im, 0, 0);
+      const b = await new Promise(r => c.toBlob(r, 'image/jpeg', 0.9)); if (b) blobs.push(new File([b], 'pasted.jpg', { type: 'image/jpeg' }));
+    } catch {}
+  }
+  resetPaste(box);
+  if (blobs.length) addPhotos(blobs); else edNote('붙여넣은 사진을 읽지 못했어요. 브라우저에서 열어 사진 추가로 올려주세요.', true);
+}
+
+/* ---------- 이벤트 ---------- */
+document.addEventListener('click', e => { const t = e.target.closest('[data-act]'); if (!t) return; const fn = ACT[t.dataset.act]; if (fn) fn(t, e); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && S.stack.length) { closeTop(); return; }
+  const t = e.target;
+  if ((e.key === 'Enter' || e.key === ' ') && t.matches && t.matches('[role="button"][data-act]')) { e.preventDefault(); t.click(); }
+});
+document.addEventListener('submit', e => { e.preventDefault(); const fn = FORM[e.target.dataset.form]; if (fn) fn(e.target); });
+document.addEventListener('input', e => { if (e.target.id === 'q') { S.q = e.target.value; schedule(); } if (e.target.id === 'ed-paste') setTimeout(harvestPaste, 50); });
+document.addEventListener('change', e => { if (e.target.id === 'ed-file') { addPhotos(e.target.files); e.target.value = ''; } });
+document.addEventListener('click', e => { const tab = e.target.closest('.tab'); if (tab && tab.dataset.tab === S.view) { if (S.view === 'inbox' && S.thread) { S.thread = null; schedule(); } window.scrollTo({ top: 0 }); } });
+function route() {
+  const h = location.hash.slice(1);
+  if (h === 'setup') return;
+  S.view = TABS.some(x => x[0] === h) ? h : 'market';
+  if (S.view !== 'inbox') S.thread = null;
+  window.scrollTo({ top: 0 }); schedule();
+}
+window.addEventListener('hashchange', route);
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; schedule(); });
+
+function maybeMarkRead() {
+  if (S.view !== 'inbox' || !S.thread || S.marking || !S.ready.priv) return;
+  const t = D.threads[S.thread]; if (!t || !t.unread) return;
+  S.marking = true;
+  setDoc(ref('private', S.me), { readAt: { [S.thread]: t.lastFromOther } }, { merge: true }).catch(e => console.warn(e)).finally(() => { setTimeout(() => { S.marking = false; }, 1500); });
+}
+
+/* ---------- 시작 ---------- */
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('./sw.js').catch(() => {});
+if (!configured) { S.phase = 'gate'; schedule(); }
+else {
+  const app = initializeApp(CFG.firebaseConfig);
+  auth = getAuth(app);
+  try { fs = initializeFirestore(app, { localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }) }); }
+  catch { fs = initializeFirestore(app, {}); }
+  onAuthStateChanged(auth, async u => {
+    if (S.joining) return;
+    stopAll();
+    if (!u) { S.phase = 'gate'; S.gate = location.hash === '#setup' ? 'setup' : 'join'; S.me = null; schedule(); return; }
+    try { await enter(u); } catch (e) { console.warn(e); S.phase = 'gate'; S.gateErr = errText(e); schedule(); }
+  });
+  setInterval(schedule, 60000);
+}
+schedule();
+</script>
+</body>
+</html>

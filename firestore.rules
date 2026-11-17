@@ -1,0 +1,134 @@
+rules_version = '2';
+
+// 나눔장터 보안 규칙
+// - 입장 코드를 맞힌 사람(joins 문서가 있는 사람)만 장터를 읽고 쓸 수 있어요.
+// - 물품·댓글·광장 글은 쓴 사람만 고치거나 지울 수 있고, 관리자는 지울 수 있어요.
+// - 쪽지는 보낸 사람과 받는 사람만 읽을 수 있어요.
+// - 입장 코드와 관리자 코드는 누구도 앱에서 읽을 수 없어요.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function me() { return request.auth.uid; }
+    function isMember() { return signedIn() && exists(/databases/$(database)/documents/joins/$(me())); }
+    function isAdmin() { return signedIn() && exists(/databases/$(database)/documents/admins/$(me())); }
+    function secret() { return get(/databases/$(database)/documents/config/secret).data; }
+    function txt(v, n) { return v is string && v.size() <= n; }
+    function d() { return request.resource.data; }
+
+    // 입장 코드 · 관리자 코드: 처음 한 번만 만들 수 있고, 아무도 읽을 수 없음
+    match /config/secret {
+      allow read: if false;
+      allow create: if signedIn()
+        && d().keys().hasOnly(['code', 'adminCode'])
+        && txt(d().code, 40) && d().code.size() >= 4
+        && txt(d().adminCode, 40) && d().adminCode.size() >= 4;
+      allow update, delete: if false;
+    }
+
+    // 입장 기록: 입장 코드가 맞아야 만들어짐
+    match /joins/{uid} {
+      allow read: if signedIn() && uid == me();
+      allow create: if signedIn() && uid == me()
+        && d().keys().hasOnly(['code', 'at'])
+        && d().code == secret().code;
+      allow update, delete: if false;
+    }
+
+    // 관리자: 관리자 코드가 맞아야 만들어짐
+    match /admins/{uid} {
+      allow read: if signedIn() && uid == me();
+      allow create: if signedIn() && uid == me()
+        && d().keys().hasOnly(['code', 'at'])
+        && d().code == secret().adminCode;
+      allow update, delete: if false;
+    }
+
+    // 상점(프로필)
+    match /members/{uid} {
+      allow read: if isMember();
+      allow create, update: if isMember() && uid == me()
+        && d().keys().hasOnly(['name', 'team', 'intro', 'joinedAt'])
+        && txt(d().name, 20) && d().name.size() > 0
+        && txt(d().team, 30) && txt(d().intro, 200);
+      allow delete: if isMember() && (uid == me() || isAdmin());
+    }
+
+    // 물품
+    function validItem() {
+      return d().keys().hasOnly(['owner', 'title', 'desc', 'price', 'status', 'at', 'upAt', 'photos', 'thumb', 'cc'])
+        && d().owner == me()
+        && txt(d().title, 40) && d().title.size() > 0
+        && txt(d().desc, 1000) && txt(d().price, 20)
+        && d().status in ['open', 'reserved', 'done']
+        && d().at is number
+        && d().photos is list && d().photos.size() <= 5
+        && txt(d().thumb, 80000)
+        && d().cc is int;
+    }
+    match /items/{id} {
+      allow read: if isMember();
+      allow create: if isMember() && validItem() && d().cc == 0;
+      allow update: if isMember() && (
+        (resource.data.owner == me() && validItem())
+        // 댓글 수(cc)는 누구나 1씩만 올리거나 내릴 수 있음
+        || (d().diff(resource.data).affectedKeys().hasOnly(['cc'])
+            && d().cc is int && d().cc >= 0
+            && (d().cc - resource.data.get('cc', 0)) in [-1, 1])
+      );
+      allow delete: if isMember() && (resource.data.owner == me() || isAdmin());
+    }
+
+    // 사진 (작게 줄인 JPEG 데이터)
+    match /photos/{id} {
+      allow read: if isMember();
+      allow create: if isMember()
+        && d().keys().hasOnly(['owner', 'item', 'data', 'at'])
+        && d().owner == me() && d().item is string && txt(d().data, 950000);
+      allow update: if false;
+      allow delete: if isMember() && (resource.data.owner == me() || isAdmin());
+    }
+
+    // 좋아요 · 찜
+    match /reactions/{uid} {
+      allow read: if isMember();
+      allow write: if isMember() && uid == me()
+        && d().keys().hasOnly(['likes', 'saves']);
+    }
+
+    // 댓글
+    match /comments/{id} {
+      allow read: if isMember();
+      allow create: if isMember()
+        && d().keys().hasOnly(['item', 'by', 'text', 'at'])
+        && d().by == me() && d().item is string && txt(d().text, 300) && d().text.size() > 0;
+      allow update: if false;
+      allow delete: if isMember() && (resource.data.by == me() || isAdmin());
+    }
+
+    // 광장
+    match /plaza/{id} {
+      allow read: if isMember();
+      allow create: if isMember()
+        && d().keys().hasOnly(['by', 'text', 'at'])
+        && d().by == me() && txt(d().text, 500) && d().text.size() > 0;
+      allow update: if false;
+      allow delete: if isMember() && (resource.data.by == me() || isAdmin());
+    }
+
+    // 쪽지: 보낸 사람과 받는 사람만 읽기
+    match /messages/{id} {
+      allow read: if isMember() && (resource.data.from == me() || resource.data.to == me());
+      allow create: if isMember()
+        && d().keys().hasOnly(['from', 'to', 'text', 'at', 'item'])
+        && d().from == me() && d().to is string && d().to != me()
+        && txt(d().text, 500) && d().text.size() > 0;
+      allow update, delete: if false;
+    }
+
+    // 나만 보는 정보 (쪽지 읽음 표시, 열쇠)
+    match /private/{uid} {
+      allow read, write: if signedIn() && uid == me();
+    }
+  }
+}

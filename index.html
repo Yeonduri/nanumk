@@ -773,11 +773,18 @@ function edNote(text, err) { if (!S.ed) return; S.ed.note = text; S.ed.noteErr =
 /* ---------- 서버 연결 ---------- */
 function errText(e) {
   const c = (e && e.code) || '';
-  if (c.includes('permission-denied')) return '권한이 없어서 저장하지 못했어요.';
+  const tail = c ? ` (오류: ${c})` : (e && e.message ? ` (오류: ${String(e.message).slice(0, 80)})` : '');
+  if (c === 'auth/operation-not-allowed' || c === 'auth/admin-restricted-operation') return '익명 로그인이 꺼져 있어요. Firebase → Authentication → 로그인 방법에서 익명을 사용 설정해 주세요.' + tail;
+  if (c === 'auth/configuration-not-found') return 'Authentication이 아직 시작되지 않았어요. Firebase → Authentication → 시작하기를 누르고 익명 로그인을 켜 주세요.' + tail;
+  if (c.startsWith('auth/api-key') || c === 'auth/invalid-api-key') return 'firebase-config.js의 설정값이 맞지 않아요. 프로젝트 설정의 값과 같은지 확인해 주세요.' + tail;
+  if (c === 'auth/unauthorized-domain') return '이 주소가 승인되지 않았어요. Authentication → 설정 → 승인된 도메인에 주소를 추가해 주세요.' + tail;
+  if (c === 'auth/network-request-failed') return '인터넷 연결을 확인해 주세요.' + tail;
+  if (c === 'not-found' || c === 'failed-precondition') return 'Firestore 데이터베이스를 찾지 못했어요. Standard 에디션, 이름 (default)로 만들었는지 확인해 주세요.' + tail;
+  if (c.includes('permission-denied')) return '권한이 없어서 저장하지 못했어요. Firestore 규칙이 게시됐는지 확인해 주세요.' + tail;
   if (c.includes('resource-exhausted')) return '오늘 쓸 수 있는 무료 사용량을 다 썼어요. 내일 다시 열려요.';
   if (c.includes('unavailable') || c.includes('network')) return '인터넷 연결이 불안정해요. 다시 시도해 주세요.';
-  if (c.includes('invalid-argument')) return '내용이 너무 크거나 형식이 맞지 않아요.';
-  return '문제가 생겨서 저장하지 못했어요. 다시 시도해 주세요.';
+  if (c.includes('invalid-argument')) return '내용이 너무 크거나 형식이 맞지 않아요.' + tail;
+  return '문제가 생겨서 저장하지 못했어요. 다시 시도해 주세요.' + tail;
 }
 let toastTimer;
 function toast(t) { const el = $('#toast'); el.textContent = t; clearTimeout(toastTimer); toastTimer = setTimeout(() => { el.textContent = ''; }, 3400); }
@@ -862,10 +869,23 @@ async function gateSubmit(kind, f) {
     if (kind === 'setup') {
       const admin = f.elements.admin.value.trim();
       if (admin.length < 4 || admin === code) throw { msg: '관리자 코드는 4자 이상, 입장 코드와 다르게 정해 주세요.' };
+      let secretDenied = null;
       try { await setDoc(ref('config', 'secret'), { code, adminCode: admin }); }
-      catch (e) { if (/permission/.test(e.code || '')) throw { msg: '이미 설정된 장터예요. 처음 화면에서 입장 코드로 들어와 주세요.' }; throw e; }
-      await setDoc(ref('joins', uid), { code, at: Date.now() });
-      await setDoc(ref('admins', uid), { code: admin, at: Date.now() });
+      catch (e) { if (/permission/.test(e.code || '')) secretDenied = e; else throw e; }
+      // 이미 코드가 저장돼 있으면(앞선 시도에서 일부만 저장된 경우 등) 같은 코드로 이어서 진행
+      const hasJoin = await getDoc(ref('joins', uid)).then(s => s.exists()).catch(() => false);
+      if (!hasJoin) {
+        try { await setDoc(ref('joins', uid), { code, at: Date.now() }); }
+        catch (e) {
+          if (secretDenied) throw { msg: '저장이 거부됐어요. Firestore 규칙이 게시되지 않았거나, 다른 입장 코드로 이미 설정된 장터예요. Firestore → 데이터 탭에 config/secret 문서가 있다면 그 안의 코드로 다시 시도해 주세요. (오류: ' + (secretDenied.code || '') + ')' };
+          throw e;
+        }
+      }
+      const hasAdmin = await getDoc(ref('admins', uid)).then(s => s.exists()).catch(() => false);
+      if (!hasAdmin) {
+        try { await setDoc(ref('admins', uid), { code: admin, at: Date.now() }); }
+        catch (e) { if (/permission/.test(e.code || '')) throw { msg: '관리자 코드가 처음 정한 코드와 달라요. 입장 코드는 맞았으니, 처음 정한 관리자 코드로 다시 시도해 주세요.' }; throw e; }
+      }
     } else {
       const has = await getDoc(ref('joins', uid));
       if (!has.exists()) {
